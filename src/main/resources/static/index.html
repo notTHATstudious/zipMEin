@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>zipMEin - Secure File Upload</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background-color: #0a0a0a;
+      color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      line-height: 1.5;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+    }
+
+    .card {
+      background-color: #111111;
+      border: 1px solid #222222;
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .logo h1 {
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      color: #ffffff;
+    }
+
+    .logo span {
+      color: #888888;
+      font-weight: 400;
+    }
+
+    .dropzone {
+      border: 2px dashed #333333;
+      border-radius: 12px;
+      padding: 40px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background-color: #0d0d0d;
+      margin-bottom: 24px;
+    }
+
+    .dropzone:hover {
+      border-color: #555555;
+      background-color: #141414;
+    }
+
+    .dropzone.dragover {
+      border-color: #ffffff;
+      background-color: #1a1a1a;
+    }
+
+    .dropzone-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 16px;
+      opacity: 0.6;
+    }
+
+    .dropzone-icon svg {
+      width: 100%;
+      height: 100%;
+      stroke: #ffffff;
+    }
+
+    .dropzone-text {
+      color: #888888;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .dropzone-text strong {
+      color: #ffffff;
+    }
+
+    .dropzone-hint {
+      color: #555555;
+      font-size: 12px;
+    }
+
+    .file-input {
+      display: none;
+    }
+
+    .file-list {
+      margin-bottom: 24px;
+      max-height: 160px;
+      overflow-y: auto;
+    }
+
+    .file-list::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .file-list::-webkit-scrollbar-track {
+      background: #1a1a1a;
+      border-radius: 2px;
+    }
+
+    .file-list::-webkit-scrollbar-thumb {
+      background: #333333;
+      border-radius: 2px;
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background-color: #1a1a1a;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      animation: slideIn 0.2s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .file-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      overflow: hidden;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .file-icon {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      opacity: 0.6;
+    }
+
+    .file-name {
+      font-size: 13px;
+      color: #cccccc;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .file-size {
+      font-size: 12px;
+      color: #555555;
+      flex-shrink: 0;
+      margin-left: 8px;
+      margin-right: 8px;
+    }
+
+    .file-remove {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      opacity: 0.4;
+      transition: opacity 0.2s;
+      flex-shrink: 0;
+    }
+
+    .file-remove:hover {
+      opacity: 1;
+    }
+
+    .file-remove svg {
+      width: 16px;
+      height: 16px;
+      stroke: #ffffff;
+    }
+
+    .password-field {
+      margin-bottom: 24px;
+    }
+
+    .password-label {
+      display: block;
+      font-size: 13px;
+      color: #888888;
+      margin-bottom: 8px;
+    }
+
+    .password-wrapper {
+      position: relative;
+    }
+
+    .password-input {
+      width: 100%;
+      padding: 14px 48px 14px 16px;
+      background-color: #0d0d0d;
+      border: 1px solid #333333;
+      border-radius: 10px;
+      color: #ffffff;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+
+    .password-input:focus {
+      outline: none;
+      border-color: #555555;
+      background-color: #111111;
+    }
+
+    .password-input::placeholder {
+      color: #444444;
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      opacity: 0.4;
+      transition: opacity 0.2s;
+    }
+
+    .password-toggle:hover {
+      opacity: 0.8;
+    }
+
+    .password-toggle svg {
+      width: 20px;
+      height: 20px;
+      stroke: #ffffff;
+    }
+
+    .upload-btn {
+      width: 100%;
+      padding: 16px 24px;
+      background-color: #ffffff;
+      color: #000000;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .upload-btn:hover:not(:disabled) {
+      background-color: #e5e5e5;
+      transform: translateY(-1px);
+    }
+
+    .upload-btn:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .upload-btn:disabled {
+      background-color: #333333;
+      color: #666666;
+      cursor: not-allowed;
+    }
+
+    .upload-btn.loading {
+      background-color: #ffffff;
+      color: #000000;
+      pointer-events: none;
+    }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #00000033;
+      border-top-color: #000000;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .status-message {
+      text-align: center;
+      font-size: 13px;
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 8px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    .status-message.success {
+      background-color: rgba(255, 255, 255, 0.05);
+      color: #ffffff;
+    }
+
+    .status-message.error {
+      background-color: rgba(255, 100, 100, 0.1);
+      color: #ff6b6b;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="logo">
+        <h1>zipME<span>in</span></h1>
+      </div>
+
+      <div class="dropzone" id="dropzone">
+        <div class="dropzone-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+          </svg>
+        </div>
+        <p class="dropzone-text"><strong>Drop files here</strong> or click to browse</p>
+        <p class="dropzone-hint">Support for multiple files</p>
+        <input type="file" class="file-input" id="fileInput" multiple>
+      </div>
+
+      <div class="file-list hidden" id="fileList"></div>
+
+      <div class="password-field">
+        <label class="password-label" for="password">Encryption Password</label>
+        <div class="password-wrapper">
+          <input type="password" class="password-input" id="password" placeholder="Enter password to encrypt">
+          <button type="button" class="password-toggle" id="passwordToggle">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" id="eyeIcon">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.64 0 8.577 3.008 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.64 0-8.577-3.008-9.963-7.178z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <button class="upload-btn" id="uploadBtn" disabled>Select files to upload</button>
+
+      <div class="status-message hidden" id="statusMessage"></div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      const dropzone = document.getElementById('dropzone');
+      const fileInput = document.getElementById('fileInput');
+      const fileList = document.getElementById('fileList');
+      const passwordInput = document.getElementById('password');
+      const passwordToggle = document.getElementById('passwordToggle');
+      const uploadBtn = document.getElementById('uploadBtn');
+      const statusMessage = document.getElementById('statusMessage');
+
+      let selectedFiles = [];
+
+      function formatFileSize(bytes) {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+      }
+
+      function updateFileList() {
+        fileList.innerHTML = '';
+        
+        if (selectedFiles.length === 0) {
+          fileList.classList.add('hidden');
+          uploadBtn.disabled = true;
+          uploadBtn.textContent = 'Select files to upload';
+          return;
+        }
+
+        fileList.classList.remove('hidden');
+        uploadBtn.disabled = false;
+        uploadBtn.textContent = 'Upload ' + selectedFiles.length + ' file' + (selectedFiles.length > 1 ? 's' : '');
+
+        selectedFiles.forEach((file, index) => {
+          const fileItem = document.createElement('div');
+          fileItem.className = 'file-item';
+          fileItem.innerHTML = 
+            '<div class="file-info">' +
+              '<svg class="file-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">' +
+                '<path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />' +
+              '</svg>' +
+              '<span class="file-name">' + file.name + '</span>' +
+            '</div>' +
+            '<span class="file-size">' + formatFileSize(file.size) + '</span>' +
+            '<button class="file-remove" data-index="' + index + '">' +
+              '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">' +
+                '<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />' +
+              '</svg>' +
+            '</button>';
+          fileList.appendChild(fileItem);
+        });
+      }
+
+      function addFiles(files) {
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          const exists = selectedFiles.some(f => f.name === file.name && f.size === file.size);
+          if (!exists) {
+            selectedFiles.push(file);
+          }
+        }
+        updateFileList();
+        hideStatus();
+      }
+
+      function showStatus(message, type) {
+        statusMessage.textContent = message;
+        statusMessage.className = 'status-message ' + type;
+        statusMessage.classList.remove('hidden');
+      }
+
+      function hideStatus() {
+        statusMessage.classList.add('hidden');
+      }
+
+      function getDownloadFilename(contentDisposition) {
+        if (!contentDisposition) {
+          return 'uploaded-files.zip';
+        }
+
+        const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+        if (utf8Match && utf8Match[1]) {
+          return decodeURIComponent(utf8Match[1]);
+        }
+
+        const plainMatch = contentDisposition.match(/filename="([^"]+)"/i);
+        return plainMatch && plainMatch[1] ? plainMatch[1] : 'uploaded-files.zip';
+      }
+
+      dropzone.addEventListener('click', () => fileInput.click());
+
+      dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropzone.classList.add('dragover');
+      });
+
+      dropzone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+      });
+
+      dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+        addFiles(e.dataTransfer.files);
+      });
+
+      fileInput.addEventListener('change', (e) => {
+        addFiles(e.target.files);
+        fileInput.value = '';
+      });
+
+      fileList.addEventListener('click', (e) => {
+        const removeBtn = e.target.closest('.file-remove');
+        if (removeBtn) {
+          const index = parseInt(removeBtn.dataset.index);
+          selectedFiles.splice(index, 1);
+          updateFileList();
+        }
+      });
+
+      passwordToggle.addEventListener('click', () => {
+        const type = passwordInput.type === 'password' ? 'text' : 'password';
+        passwordInput.type = type;
+        
+        const eyeIcon = document.getElementById('eyeIcon');
+        if (type === 'text') {
+          eyeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />';
+        } else {
+          eyeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.64 0 8.577 3.008 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.64 0-8.577-3.008-9.963-7.178z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />';
+        }
+      });
+
+      uploadBtn.addEventListener('click', async () => {
+        if (selectedFiles.length === 0) return;
+
+        uploadBtn.classList.add('loading');
+        uploadBtn.innerHTML = '<div class="spinner"></div> Uploading...';
+        hideStatus();
+
+        try {
+          const formData = new FormData();
+          selectedFiles.forEach((file) => formData.append('files', file));
+
+          const password = passwordInput.value.trim();
+          if (password) {
+            formData.append('password', password);
+          }
+
+          const response = await fetch('/upload', {
+            method: 'POST',
+            body: formData
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || 'Upload failed. Please try again.');
+          }
+
+          const zipBlob = await response.blob();
+          const downloadFilename = getDownloadFilename(response.headers.get('Content-Disposition'));
+          const blobUrl = URL.createObjectURL(zipBlob);
+          const link = document.createElement('a');
+          link.href = blobUrl;
+          link.download = downloadFilename;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          URL.revokeObjectURL(blobUrl);
+
+          showStatus('ZIP downloaded successfully.', 'success');
+          selectedFiles = [];
+          updateFileList();
+          passwordInput.value = '';
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Upload failed. Please try again.';
+          showStatus(message, 'error');
+        } finally {
+          uploadBtn.classList.remove('loading');
+          uploadBtn.textContent = selectedFiles.length === 0
+            ? 'Select files to upload'
+            : 'Upload ' + selectedFiles.length + ' file' + (selectedFiles.length > 1 ? 's' : '');
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
